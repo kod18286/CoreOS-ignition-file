@@ -1,0 +1,41 @@
+#### download fcct tool (Fedora CoreOS Config Transpiler)
+$ wget https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/32.20200601.3.0/x86_64/fedora-coreos-32.20200601.3.0-qemu.x86_64.qcow2.xz
+$ unxz fedora-coreos-32.20200601.3.0-qemu.x86_64.qcow2.xz
+
+!!! you could also use https://fcct.techoverflow.net instead of fcct
+
+#### create hashed password
+$ openssl passwd -1
+Password: 
+Verifying - Password: 
+$1$/SibSoLJ$m79rivmJKBMJprRCkXGkz.
+
+#### create fcct file.
+#### line 8: set hostname 'coreos'
+#### line 13, the hashed password
+#### line 15: ssh public key, you can add multiple keys
+$ vim -c "set number" fcos36.fcct
+  1 variant: fcos
+  2 version: 1.0.0
+  3 storage:
+  4   files:
+  5     - path: "/etc/hostname"
+  6       mode: 420
+  7       contents:
+  8         source: data:,coreos
+  9 passwd:
+ 10   users:
+ 11     - name: coreos
+ 12       groups: [sudo,docker]
+ 13       password_hash: "$1$/SibSoLJ$m79rivmJKBMJprRCkXGkz."
+ 14       ssh_authorized_keys:
+ 15         - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/4xXf77ED/lw+wzFwCysNDEO2NE+QxwVGNMiosTVtyIdgucB1r3PENiq3+5rzzM2G+FjIdT+gE8RS1hkv2KbKhOOgpA70u6GNyGh9o5EjZUO519vJz25Gy//p2c3PzotGXyEuVJn+CL38nF4qNoZYQfDh9DGJXsNorhsfnvq23a/QmrWxjk8    upIl0CPAwk315hnqkHS9TIWY5FCMwAoBSJ2hSh82cFT5bl66T1SWY+bYM5MC0hhIc32q4g4PCFTc1YyCjB8TYrvwaE41k4/mndpeCxCWhTdMgO+fJQOcEKdu+jv3evrAQuZj7YbpeBWLj4dRsksVb0F8CHpMxTraL9+/v2zSBEQaJN48Hj+D2//Zctj5YRI9Mh+wzNjjqsTh5a2mC5qOS23IuJ252cLV2TyfyZ    1VX0f7g6S07rK97gfmLvmExbz5u8AEOGPPdVKTJw3z8tqwSWHt7TS0oupk5M38X7DCkbUnAOowG6/Cfai/6pascRWYI9vIRsbFMUlk= ycheng@NUC10"
+
+#### generate ignition file
+$ ./fcct -p -o coreos.ign ./fcos36.fcct
+$ ls
+coreos.ign  fcct  fcos36.fcc
+
+#### start http server (run the command under the ignitiondirectory to be shared)
+$ python3 -m http.server
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
